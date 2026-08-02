@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hdoc's Notes App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- ヘッダーエリア -->
+        <header class="app-header">
+            <h1 class="logo">📝 Hdoc's Notes App</h1>
+            <div id="user-info" class="user-info hidden">
+                <span id="welcome-msg">ようこそ</span>
+                <button id="logout-btn" class="btn btn-secondary">ログアウト</button>
+            </div>
+        </header>
+
+        <!-- アラート通知エリア -->
+        <div id="alert-box" class="alert hidden"></div>
+
+        <!-- 認証エリア（ログイン前） -->
+        <section id="auth-section" class="auth-section">
+            <div class="auth-card">
+                <!-- タブ切り替えボタン -->
+                <div class="auth-tabs">
+                    <button id="tab-login" class="tab-btn active">ログイン</button>
+                    <button id="tab-register" class="tab-btn">新規登録</button>
+                </div>
+
+                <!-- ログインフォーム -->
+                <form id="login-form" class="auth-form">
+                    <h2>ログイン</h2>
+                    <div class="form-group">
+                        <label for="login-email">メールアドレス</label>
+                        <input type="email" id="login-email" required placeholder="example@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">パスワード</label>
+                        <input type="password" id="login-password" required placeholder="パスワードを入力">
+                    </div>
+                    <button type="submit" class="btn btn-primary">ログイン</button>
+                </form>
+
+                <!-- 新規登録フォーム -->
+                <form id="register-form" class="auth-form hidden">
+                    <h2>新規ユーザー登録</h2>
+                    <div class="form-group">
+                        <label for="register-username">ユーザー名</label>
+                        <input type="text" id="register-username" required placeholder="ユーザー名">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">メールアドレス</label>
+                        <input type="email" id="register-email" required placeholder="example@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">パスワード</label>
+                        <input type="password" id="register-password" required placeholder="パスワード">
+                    </div>
+                    <button type="submit" class="btn btn-primary">アカウントを作成</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- メインノート管理エリア（ログイン後） -->
+        <main id="app-section" class="app-section hidden">
+            <!-- ノート作成・編集フォーム -->
+            <section class="note-editor-card">
+                <h2 id="editor-title">新しいノートを作成</h2>
+                <form id="note-form">
+                    <input type="hidden" id="editing-note-id" value="">
+                    <div class="form-group">
+                        <label for="note-title-input">タイトル</label>
+                        <input type="text" id="note-title-input" required placeholder="タイトルを入力...">
+                    </div>
+                    <div class="form-group">
+                        <label for="note-content-input">本文</label>
+                        <textarea id="note-content-input" rows="4" placeholder="本文を入力..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" id="save-note-btn" class="btn btn-primary">ノートを保存</button>
+                        <button type="button" id="cancel-edit-btn" class="btn btn-secondary hidden">キャンセル</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- ノート一覧表示エリア -->
+            <section class="notes-list-section">
+                <h2>マイノート一覧</h2>
+                <div id="notes-container" class="notes-grid">
+                    <!-- ここに JavaScript (index.js) でノートカードが追加されます -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript の読み込み (index.js) -->
+    <script src="index.js"></script>
+</body>
+
+</html>
