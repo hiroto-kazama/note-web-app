@@ -241,3 +241,68 @@ services:
 ### ④ DOM操作における `textContent` と `value` の違い
 * **`textContent`**: `div` や `span` などの囲み要素のテキストを設定するために使用する。
 * **`value`**: `input` や `textarea` などの入力欄に入力された値を設定・取得するために使用する。
+
+---
+
+## 12. 本日の学び (2026-08-30): VirtualBox (Ubuntu) での自作サーバー構築と Linux 移行
+
+### ① VirtualBox ネットワークと SSH リモート接続
+* **ホストオンリーアダプターの活用**:
+  - `192.168.56.xxx` のローカル IP を介して Windows（ホスト）と Ubuntu（ゲスト VM）間で直接通信。
+* **SSH による快適なサーバー管理**:
+  - `openssh-server` を導入し、Windows の PowerShell から `ssh user@IP` で接続することで、クリップボード共有の制約を受けずに快適な操作・コピペ環境を実現。
+
+### ② GitHub と SSH 鍵認証 (`ed25519`) による継続的デプロイ基盤
+* **パスワード認証廃止と公開鍵認証**:
+  - `ssh-keygen -t ed25519` で生成した公開鍵を GitHub に登録することで、パスワード入力なしで安全に `git clone` や `git pull` によるコード同期が可能に。
+  - Windows で `git push` ➔ Ubuntu で `git pull` の一発同期ワークフローを確立。
+
+### ③ ポート競合 (`address already in use: 3306`) の根本原因と解決
+* **トラブル現象**:
+  - Docker 起動時に `failed to bind host port 0.0.0.0:3306/tcp: address already in use` が発生。
+* **根本原因と対処**:
+  - Ubuntu OS 自体のネイティブ MySQL サービスが自動起動して 3306 ポートを占有していた。
+  - `sudo systemctl stop mysql` および `sudo systemctl disable mysql` を実行して停止・無効化し、Docker コンテナへポートを譲渡して解決。
+
+### ④ 自作 Ubuntu サーバーからの Web アプリ配信
+* **マルチ環境での稼働確認**:
+  - Ubuntu 上で Docker (MySQL 8.0) と Node.js (Express) を起動し、Windows ブラウザから `http://192.168.56.101:3000` にアクセスして Web アプリが正常稼働することを確認。
+
+---
+
+## 13. 本日の学び (2026-09-16): 認証付きノート作成 (Create) 連携とイベント制御
+
+### ① `Authorization: Bearer <token>` ヘッダーの仕様と落とし穴
+* **半角スペースの重要性**:
+  - HTTP 認証ヘッダーでは `'Authorization': 'Bearer ' + token` のように、スキーム名（`Bearer`）とトークン値の間に**必ず半角スペース**が必要。
+  - スペースが抜けるとサーバーの `authHeader.split(' ')[1]` でトークンを抽出できず、`401 Unauthorized: Malformed token` エラーになる。
+
+### ② 変数のシャドウイングと TDZ (Temporal Dead Zone)
+* **現象と根本原因**:
+  - ファイル冒頭の DOM 変数（`noteTitle`）と同名のローカル変数を関数内で `const noteTitle = noteTitle.value;` と定義しようとすると、宣言前の参照とみなされ `ReferenceError: Cannot access 'noteTitle' before initialization` が発生する。
+* **解決策**:
+  - 入力値を受け取るローカル変数は `const title = noteTitle.value;` のように意味の異なる適切な名前をつける。
+
+### ③ イベントリスナーの登録位置とフォーム送信の制御
+* **関数の外側でのイベント登録**:
+  - `noteForm.addEventListener("submit", handleNoteSubmit)` を関数内部に書いてしまうと、初回クリック時にハンドラが実行されず、HTML フォームのデフォルト動作（ページ全体のリロード）が暴発して初期画面（ログイン前）に戻ってしまう。
+  - イベントリスナーは必ず関数の「外側（スクリプトの末尾など）」で登録する。
+
+---
+
+## 14. 本日の学び (2026-09-16): ノート一覧表示 (Read) と動的DOMレンダリング
+
+### ① テンプレートリテラルを用いた動的 HTML レンダリング
+* **バッククォート記法と変数の展開**:
+  - `innerHTML` にバッククォート（`` ` ``）を使って HTML 構造を定義し、`${note.title}` や `${note.content}` で各ノートのプロパティを埋め込む。
+  - `new Date(note.created_at).toLocaleString()` で作成日時を日本標準の可読な日時にフォーマット。
+
+### ② 配列の反復処理と DOM への追加 (`appendChild`)
+* **データ構造の階層理解**:
+  - サーバーの返却データ `{ notes: [ ... ] }` から配列部分（`data.notes`）を取り出して `forEach` でループ処理。
+  - `document.createElement('div')` でカード枠を生成し、`notesContainer.appendChild(newDiv)` で親コンテナに追加。
+  - ノートが 0 件の場合のメッセージ分岐と、一覧再取得前の `notesContainer.innerHTML = ""` によるリセット制御。
+
+### ③ ライフサイクルと連動した自動取得（リアクティブUI）
+* **呼び出しタイミングの集約**:
+  - `fetchNotes()` を「通常ログイン成功時」「リロード（自動ログイン）時」「新規ノート作成成功時」の 3 箇所で呼び出すことで、画面リロードなしで常に最新の一覧が同期される SPA アーキテクチャを実現。
