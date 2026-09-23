@@ -36,6 +36,7 @@ const notesContainer = document.getElementById("notes-container");
 const logoutButton = document.getElementById("logout-btn");
 const userInfo = document.getElementById("user-info");
 
+var editingNoteId = null;
 // =============================================================================
 // 2. ノート一覧の取得・描画関数 (Fetch & Render Notes)
 // =============================================================================
@@ -78,7 +79,7 @@ const fetchNotes = async () => {
                     <div class="note-card-footer">
                         <small>${new Date(note.created_at).toLocaleString()}</small>
                         <div>
-                            <button class="btn btn-secondary edit-btn" data-id="${note.id}">編集</button>
+                            <button class="btn btn-secondary edit-btn" data-id="${note.id}" data-title="${note.title}" data-content="${note.content}">編集</button>
                             <button class="btn btn-danger delete-btn" data-id="${note.id}">削除</button>
                         </div>
                     </div>
@@ -222,9 +223,17 @@ const handleNoteSubmit = async (event) => {
         return;
     }
     try {
-        const url = "/api/notes";
+        var method;
+        var url;
+        if (editingNoteId === null) {
+            method = 'POST';
+            url = "/api/notes";
+        } else {
+            method = 'PUT';
+            url = `/api/notes/${editingNoteId}`;
+        }
         const response = await fetch(url, {
-            method: 'POST',
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
@@ -234,6 +243,7 @@ const handleNoteSubmit = async (event) => {
         if (response.ok) {
             noteTitle.value = "";
             noteBody.value = "";
+            editingNoteId = null;
             console.log("note create succeeded");
 
             // ノート作成成功時に一覧を即時再取得して画面を更新
@@ -322,4 +332,18 @@ notesContainer.addEventListener('click', (event) => {
         const id = event.target.dataset.id;
         handleDeleteNote(id);
     }
+    if (event.target.classList.contains('edit-btn')) {
+        const id = event.target.dataset.id;
+        const title = event.target.dataset.title;
+        const content = event.target.dataset.content;
+        handleNoteEdit(id, title, content);
+    }
 });
+
+
+const handleNoteEdit = (id, title, content) => {
+    console.log(id, title, content);
+    editingNoteId = id;
+    noteTitle.value = title;
+    noteBody.value = content;
+};
