@@ -306,3 +306,43 @@ services:
 ### ③ ライフサイクルと連動した自動取得（リアクティブUI）
 * **呼び出しタイミングの集約**:
   - `fetchNotes()` を「通常ログイン成功時」「リロード（自動ログイン）時」「新規ノート作成成功時」の 3 箇所で呼び出すことで、画面リロードなしで常に最新の一覧が同期される SPA アーキテクチャを実現。
+
+---
+
+## 15. 本日の学び (2026-09-22): ノート編集 (Update) 機能の実装
+
+### ① 実行時エラー (Runtime Error) とビルドエラーの違い
+* **JavaScript はコンパイルされない**:
+  - フロントエンドの `index.js` は `pnpm run dev` でビルドされるのではなく、ブラウザが直接読み込む。そのためファイルの保存時にエラーは検知されず、**実行された瞬間にはじめてエラーが発生する**。
+* **2種類のエラー**:
+  - **構文エラー (Syntax Error)**: ファイル読み込み時（即座）に発生。例: 括弧の閉じ忘れ。
+  - **実行時エラー (Runtime Error)**: コードが実行されたその瞬間に発生。例: `null.addEventListener()` → `document.getElementById()` が `null` を返した要素に対してメソッドを呼び出した場合。
+* **TypeScript との対比**: TypeScript はコンパイル時に型チェックを行うため、`null` の可能性があればビルド段階で警告できる。Vanilla JS では F12 コンソールが唯一の検知手段。
+
+### ② `document.getElementById` の落とし穴
+* **存在しない ID は null を返す**:
+  - `document.getElementById("存在しないID")` はエラーを出さず `null` を返す。
+  - その `null` に対して `.addEventListener()` を呼ぶと `TypeError: Cannot read properties of null` が発生し、以降のコード（自動ログイン処理など）が一切実行されなくなる。
+* **動的要素には getElementById は使えない**:
+  - `fetchNotes()` でループ生成されるノートカードの編集ボタン（`class="edit-btn"`）は動的な要素のため、静的な `getElementById` では取得できない。このような要素には**イベント委譲**を使う。
+
+### ③ イベント委譲 (Event Delegation) の応用
+* **親要素でまとめて受け取る**:
+  - 動的に生成される複数のボタン（削除・編集）に対し、個別にリスナーを設定するのではなく、親の `notesContainer` でクリックを一括受け取りし `event.target.classList.contains(クラス名)` で処理を振り分ける。
+* **`data-*` 属性でデータを運ぶ**:
+  - 描画時にボタンへ `data-id`, `data-title`, `data-content` を埋め込み、クリック時に `event.target.dataset.id` などで取り出すことで、イベントハンドラにノートのデータを受け渡せる。
+
+### ④ 編集モードの状態管理（`editingNoteId`）
+* **グローバル変数による状態保持**:
+  - `var editingNoteId = null;` をファイル上部に宣言し、「現在編集中のノートID」を保持する。
+  - 編集ボタン押下時にIDをセット、保存成功後に `null` に戻すことで「新規作成モード」と「編集モード」を切り替える。
+* **`=`（代入）と `===`（比較）の違い**:
+  - `editingNoteId = null` はグローバル変数に null を上書きする**代入**。
+  - `editingNoteId === null` は値が null かどうかを調べる**比較**。条件分岐では必ず `===` を使う。
+
+### ⑤ 改行コード (LF / CRLF) の違い
+* **OS による差異**:
+  - Linux/Mac は `LF`（`\n`）、Windows は `CRLF`（`\r\n`）で改行を表現する。
+* **Git の `core.autocrlf` 設定**:
+  - Windows の Git はデフォルトで `core.autocrlf = true`。コミット時に CRLF→LF、チェックアウト時に LF→CRLF へ自動変換する。
+  - `git add` 時に `warning: LF will be replaced by CRLF` が出るのはこの変換の通知であり、エラーではない。

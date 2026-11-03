@@ -35,7 +35,7 @@ const notesContainer = document.getElementById("notes-container");
 // ユーザー情報・ログアウト
 const logoutButton = document.getElementById("logout-btn");
 const userInfo = document.getElementById("user-info");
-
+const editorTitle = document.getElementById("editor-title");
 var editingNoteId = null;
 // =============================================================================
 // 2. ノート一覧の取得・描画関数 (Fetch & Render Notes)
@@ -346,4 +346,7 @@ const handleNoteEdit = (id, title, content) => {
     editingNoteId = id;
     noteTitle.value = title;
     noteBody.value = content;
+    editorTitle.textContent = 'ノートを編集';
+    noteCancel.classList.remove('hidden');
+    noteSubmit.textContent = '変更を保存';
 };
